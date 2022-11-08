@@ -23,8 +23,6 @@ enum IntoColorError {
     IntConversion,
 }
 
-// I AM NOT DONE
-
 // Your task is to complete this implementation
 // and return an Ok result of inner type Color.
 // You need to create an implementation for a tuple of three integers,
@@ -33,27 +31,51 @@ enum IntoColorError {
 // Note that the implementation for tuple and array will be checked at compile time,
 // but the slice implementation needs to check the slice length!
 // Also note that correct RGB color values must be integers in the 0..=255 range.
+impl Color {
+    fn checkAndCovValue(v: i16) -> Result<u8, IntoColorError> {
+        if v < 0 || v > 255 {
+            Err(IntoColorError::IntConversion)
+        } else {
+            Ok(v as u8)
+        }
+    }
+}
+
+macro_rules! implTryFrom {
+    ($typ:ty) => {
+        impl TryFrom<$typ> for Color {
+            type Error = IntoColorError;
+            fn try_from(tuple: $typ) -> Result<Self, Self::Error> {
+                if tuple.len() != 3 {
+                    return Err(IntoColorError::BadLen);
+                }
+                Ok(Color {
+                    red: Self::checkAndCovValue(tuple[0])?,
+                    green: Self::checkAndCovValue(tuple[1])?,
+                    blue: Self::checkAndCovValue(tuple[2])?,
+                })
+            }
+        }
+    };
+}
 
 // Tuple implementation
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        Ok(Color {
+            red: Self::checkAndCovValue(tuple.0)?,
+            green: Self::checkAndCovValue(tuple.1)?,
+            blue: Self::checkAndCovValue(tuple.2)?,
+        })
     }
 }
 
 // Array implementation
-impl TryFrom<[i16; 3]> for Color {
-    type Error = IntoColorError;
-    fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
-    }
-}
+implTryFrom!([i16; 3]);
 
 // Slice implementation
-impl TryFrom<&[i16]> for Color {
-    type Error = IntoColorError;
-    fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
-    }
-}
+implTryFrom!(&[i16]);
 
 fn main() {
     // Use the `try_from` function
